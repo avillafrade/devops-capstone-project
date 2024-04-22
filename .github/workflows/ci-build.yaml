@@ -1,5 +1,4 @@
 name: CI Build
-
 on:
   push:
     branches:
@@ -31,7 +30,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         with:
-          submodules: true
+          node-version: '20'  # Update to use Node.js 20
 
       - name: Install dependencies
         run: |
@@ -47,4 +46,3 @@ jobs:
         run: nosetests
         env:
           DATABASE_URI: "postgresql://postgres:pgs3cr3t@postgres:5432/testdb"
-          
