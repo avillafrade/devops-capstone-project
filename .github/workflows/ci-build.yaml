@@ -13,11 +13,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-
+        with:
+          # Remove the 'node-version' input as it is not required
+          
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
           python-version: '3.9'
+          # Remove the 'node-version' input as it is not required
 
       - name: Install dependencies
         run: |
@@ -33,5 +36,3 @@ jobs:
         run: nosetests
         env:
           DATABASE_URI: "postgresql://postgres:pgs3cr3t@postgres:5432/testdb"
-
-
