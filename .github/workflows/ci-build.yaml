@@ -35,4 +35,4 @@ jobs:
       - name: Run unit tests
         run: nosetests
         env:
-          DATABASE_URI: "postgresql://postgres:pgs3cr3t@172.17.56.34:5432/testdb"
+          DATABASE_URI: "postgresql://postgres:pgs3cr3t@postgresql:5432/testdb"
