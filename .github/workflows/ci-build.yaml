@@ -14,9 +14,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-        with:
-          # Specify the desired Node.js version
-          node-version: '20'
 
       - name: Set up Python
         uses: actions/setup-python@v2
