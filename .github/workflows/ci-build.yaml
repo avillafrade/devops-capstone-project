@@ -14,14 +14,14 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-        # Remove the 'node-version' input as it is not required
-        # Node.js 20 is now the default for this action
+        with:
+          # Specify the desired Node.js version
+          node-version: '20'
 
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
           python-version: '3.9'
-          # Remove the 'node-version' input as it is not required
 
       - name: Install dependencies
         run: |
