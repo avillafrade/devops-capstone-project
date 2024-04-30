@@ -185,3 +185,4 @@ class TestAccountService(TestCase):
             actual_value = response.headers.get(header_name)
             self.assertIsNotNone(actual_value, f"Header '{header_name}' not found in response")
             self.assertEqual(actual_value, expected_value, f"Unexpected value for header '{header_name}'")
+    
