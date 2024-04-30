@@ -32,7 +32,6 @@ HTTPS_ENVIRON = {
 class TestAccountService(TestCase):
     """Account Service Tests"""
 
-
     @classmethod
     def setUpClass(cls):
         """Run once before all tests"""
