@@ -2,36 +2,40 @@ apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
   name: cd-pipeline
+  namespace: sn-labs-alejandrovi5
 spec:
-  workspaces:
-    - name: pipeline-workspace
   params:
     - name: repo-url
       type: string
     - name: branch
-      type: string
       default: main
+      type: string
     - name: build-image
-
+      type: string
+  workspaces:
+    - name: pipeline-workspace
   tasks:
     - name: init
-      workspaces:
-        - name: source
-          workspace: pipeline-workspace
-      taskRef:
-        name: git-clone
       params:
         - name: url
-          value: $(params.repo-url)
+          value: "$(params.repo-url)"
         - name: revision
-          value: $(params.branch)
-
-    - name: lint
+          value: "$(params.branch)"
+      taskRef:
+        name: git-clone
       workspaces:
         - name: source
           workspace: pipeline-workspace
+    - name: upgrade-pip
+      params:
+        - name: version
+          value: "24.0"
       taskRef:
-        name: flake8
+        name: pip-upgrade
+      workspaces:
+        - name: source
+          workspace: pipeline-workspace
+    - name: lint
       params:
         - name: image
           value: "python:3.9-slim"
@@ -43,29 +47,36 @@ spec:
             - "--statistics"
             - "--extend-ignore=E303,W291,W292"
             - "."
-
-    - name: tests
+      taskRef:
+        name: flake8
       workspaces:
         - name: source
           workspace: pipeline-workspace
-      taskRef:
-        name: nose
+    - name: tests
       params:
         - name: database_uri
           value: "sqlite:///test.db"
         - name: args
           value: "-v --with-spec --spec-color"
-
-    - name: build
+      taskRef:
+        name: nose
       workspaces:
         - name: source
           workspace: pipeline-workspace
-      taskRef:
-        name: buildah
-        kind: ClusterTask
+    - name: build
       params:
-      - name: IMAGE
-        value: "$(params.build-image)"
-      runAfter:
-        - tests
-        - lint
+        - name: SCRIPT
+          value: |
+            echo "Updating manifest..."
+            sed -i "s|IMAGE_NAME_HERE|$(params.build-image)|g" deploy/deployment.yaml
+            cat deploy/deployment.yaml
+            echo "Deploying to OpenShift..."
+            oc apply -f deploy/
+            oc get pods -l app=accounts
+      taskRef:
+        kind: ClusterTask
+        name: openshift-client
+      workspaces:
+        - name: manifest-dir
+          workspace: pipeline-workspace
+
