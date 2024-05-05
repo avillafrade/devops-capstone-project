@@ -2,40 +2,36 @@ apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
   name: cd-pipeline
-  namespace: sn-labs-alejandrovi5
 spec:
+  workspaces:
+    - name: pipeline-workspace
   params:
     - name: repo-url
       type: string
     - name: branch
+      type: string
       default: main
-      type: string
     - name: build-image
-      type: string
-  workspaces:
-    - name: pipeline-workspace
+
   tasks:
     - name: init
-      params:
-        - name: url
-          value: "$(params.repo-url)"
-        - name: revision
-          value: "$(params.branch)"
+      workspaces:
+        - name: source
+          workspace: pipeline-workspace
       taskRef:
         name: git-clone
-      workspaces:
-        - name: source
-          workspace: pipeline-workspace
-    - name: upgrade-pip
       params:
-        - name: version
-          value: "24.0"
-      taskRef:
-        name: pip-upgrade
+        - name: url
+          value: $(params.repo-url)
+        - name: revision
+          value: $(params.branch)
+
+    - name: lint
       workspaces:
         - name: source
           workspace: pipeline-workspace
-    - name: lint
+      taskRef:
+        name: flake8
       params:
         - name: image
           value: "python:3.9-slim"
@@ -47,36 +43,29 @@ spec:
             - "--statistics"
             - "--extend-ignore=E303,W291,W292"
             - "."
-      taskRef:
-        name: flake8
+
+    - name: tests
       workspaces:
         - name: source
           workspace: pipeline-workspace
-    - name: tests
+      taskRef:
+        name: nose
       params:
         - name: database_uri
           value: "sqlite:///test.db"
         - name: args
           value: "-v --with-spec --spec-color"
-      taskRef:
-        name: nose
+
+    - name: build
       workspaces:
         - name: source
           workspace: pipeline-workspace
-    - name: build
-      params:
-        - name: SCRIPT
-          value: |
-            echo "Updating manifest..."
-            sed -i "s|IMAGE_NAME_HERE|$(params.build-image)|g" deploy/deployment.yaml
-            cat deploy/deployment.yaml
-            echo "Deploying to OpenShift..."
-            oc apply -f deploy/
-            oc get pods -l app=accounts
       taskRef:
+        name: buildah
         kind: ClusterTask
-        name: openshift-client
-      workspaces:
-        - name: manifest-dir
-          workspace: pipeline-workspace
-
+      params:
+      - name: IMAGE
+        value: "$(params.build-image)"
+      runAfter:
+        - tests
+        - lint
