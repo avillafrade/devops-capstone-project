@@ -11,8 +11,6 @@ spec:
     - name: branch
       type: string
       default: main
-    - name: build-image
-
   tasks:
     - name: init
       workspaces:
@@ -51,10 +49,14 @@ spec:
       taskRef:
         name: nose
       params:
+        - name: args
+          value:
+            - "-v"
+            - "--with-spec"
+            - "--spec-color"
+            - "."
         - name: database_uri
           value: "sqlite:///test.db"
-        - name: args
-          value: "-v --with-spec --spec-color"
 
     - name: build
       workspaces:
@@ -64,8 +66,8 @@ spec:
         name: buildah
         kind: ClusterTask
       params:
-      - name: IMAGE
-        value: "$(params.build-image)"
+        - name: IMAGE
+          value: "$(params.build-image)"
       runAfter:
         - tests
         - lint
