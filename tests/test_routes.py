@@ -171,20 +171,11 @@ class TestAccountService(TestCase):
         """It should return security headers"""
         response = self.client.get('/', environ_overrides=HTTPS_ENVIRON)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        # Define expected headers
-        expected_headers = {
+        headers = {
             'X-Frame-Options': 'SAMEORIGIN',
             'X-Content-Type-Options': 'nosniff',
             'Content-Security-Policy': 'default-src \'self\'; object-src \'none\'',
             'Referrer-Policy': 'strict-origin-when-cross-origin'
         }
-
-        # Verify that all expected headers are present and have correct values
-        for header_name, expected_value in expected_headers.items():
-            actual_value = response.headers.get(header_name)
-            self.assertIsNotNone(actual_value, f"Header '{header_name}' not found in response")
-            self.assertEqual(actual_value, expected_value, f"Unexpected value for header '{header_name}'")
-
-
-
+        for key, value in headers.items():
+            self.assertEqual(response.headers.get
